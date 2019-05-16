@@ -60,8 +60,7 @@ def TrainMachine():
         X_test_vect = vect.transform(X_test)
         y_pred = nb.predict(X_test_vect)
 
-        if accuracy_score(y_test, y_pred) * 100 > 70:
-            # TODO change this back
+        if accuracy_score(y_test, y_pred) * 100 > 80:
             go = False
         if count % 20 == 0:
             print('| Insufficient test result accuracy. Retraining...'.ljust(82) + '|')
