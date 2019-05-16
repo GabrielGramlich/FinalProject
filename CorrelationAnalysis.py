@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-import collections
 import random
 
 
@@ -11,21 +9,27 @@ def DetermineCorrelationVader(sentimentData, weatherScores):
 
     totalSentiment = 0
     totalWeather = 0
+
     for i in range(len(sentimentData)):
-        weatherScore = weatherScores[i][0]
-        correlation = False
-        point = sentimentData[i][1][1]
-        low = point - variance
-        high = point + variance
-        if weatherScore > low and weatherScore < high:
-            correlation = True
-        correlationResults.append([point, weatherScore, correlation])
-        if correlation:
-            totalTrue += 1
-        else:
-            totalFalse += 1
-        totalSentiment += point
-        totalWeather += weatherScores[i][0]
+        try:
+            weatherScore = weatherScores[i][0]
+            correlation = False
+            point = sentimentData[i][1][1]
+            low = point - variance
+            high = point + variance
+            if weatherScore > low and weatherScore < high:
+                correlation = True
+            correlationResults.append([point, weatherScore, correlation])
+            if correlation:
+                totalTrue += 1
+            else:
+                totalFalse += 1
+            totalSentiment += point
+            totalWeather += weatherScores[i][0]
+        except IndexError:
+            print('Sentiment data: ' + str(len(sentimentData)))
+            print('Weather data: ' + str(len(weatherScores)))
+            print('i: ' + str(i))
 
     percentCorrelation = totalTrue / len(sentimentData) * 100
     variance = variance / 2 * 100
@@ -35,24 +39,6 @@ def DetermineCorrelationVader(sentimentData, weatherScores):
     returnData = [percentCorrelation, variance, averageWeather, averageSentiment, totalTrue, totalFalse]
 
     return returnData, correlationResults
-
-
-def OutputDataVader(returnData, correlationData):
-    print('\n\n\nVader Sentiment Results:')
-
-    print()
-    print('Average tweet sentiment score:\t{:.4f}'.format(returnData[3]))
-    print('Average weather score:\t\t\t{:.4f}'.format(returnData[2]))
-    print('Percent true correlation:\t\t{:.2f}%'.format(returnData[4] / (returnData[4] + returnData[5])))
-    print('Percent false correlation:\t\t{:.2f}%'.format(returnData[5] / (returnData[4] + returnData[5])))
-
-    randomData = CreateRandomCorrelationData(len(correlationData))
-    DisplayGraphVader(randomData, 'Random Data')
-    DisplayGraphVader(correlationData, 'Vader Data')
-
-    print()
-    print('There is a {:.2f}% correlation between mood and weather given a {:.1f}% variance.'.format(returnData[0],
-                                                                                                     returnData[1]))
 
 
 def CreateRandomCorrelationData(upperBound):
@@ -66,31 +52,6 @@ def CreateRandomCorrelationData(upperBound):
         randomData.append([randomSentiment, randomWeather])
 
     return randomData
-
-
-def DisplayGraphVader(correlationData, title):
-    sentimentPlotDict = {}
-    weatherPlotDict = {}
-    for i in range(len(correlationData)):
-        key = (correlationData[i][0] * 1000000) + i
-        sentimentPlotDict[key] = correlationData[i][0]
-        weatherPlotDict[key] = correlationData[i][1]
-
-    orderedSentimentDict = collections.OrderedDict(sorted(sentimentPlotDict.items()))
-    orderedWeatherDict = collections.OrderedDict(sorted((weatherPlotDict.items())))
-
-    sentimentPlotPoints = []
-    for key in orderedSentimentDict:
-        sentimentPlotPoints.append(orderedSentimentDict[key])
-
-    weatherPlotPoints = []
-    for key in orderedWeatherDict:
-        weatherPlotPoints.append(orderedWeatherDict[key])
-
-    plt.plot(sentimentPlotPoints, 'grey', sentimentPlotPoints, 'k.', weatherPlotPoints, 'k', weatherPlotPoints, 'b.')
-    plt.ylabel('negative to positive sentiment(grey) and weather(blue)')
-    plt.title(title)
-    plt.show()
 
 
 def DetermineCorrelationNaiveBayes(sentimentData, weatherScores):
@@ -134,58 +95,6 @@ def DetermineCorrelationNaiveBayes(sentimentData, weatherScores):
                   percentCorrelation]
 
     return correlationResults, returnData
-
-
-def OutputDataNaiveBayes(correlationData, returnData):
-    print('\n\n\nNaive Bayes Sentiment Results:')
-
-    print()
-    print('Percent negative tweets:\t{:.2f}%'.format(returnData[0] /
-                                                     (returnData[0] + returnData[1] + returnData[2])))
-    print('Percent neutral tweets:\t\t{:.2f}%'.format(returnData[1] /
-                                                      (returnData[0] + returnData[1] + returnData[2])))
-    print('Percent positive tweets:\t{:.2f}%'.format(returnData[2] /
-                                                     (returnData[0] + returnData[1] + returnData[2])))
-    print('Percent negative weather:\t{:.2f}%'.format(returnData[3] /
-                                                      (returnData[3] + returnData[4] + returnData[5])))
-    print('Percent neutral weather:\t{:.2f}%'.format(returnData[4] /
-                                                     (returnData[3] + returnData[4] + returnData[5])))
-    print('Percent positive weather:\t{:.2f}%'.format(returnData[5] /
-                                                      (returnData[3] + returnData[4] + returnData[5])))
-    print('Percent true correlation:\t{:.2f}%'.format(returnData[6] / (returnData[6] + returnData[7])))
-    print('Percent false correlation:\t{:.2f}%'.format(returnData[7] / (returnData[6] + returnData[7])))
-
-    DisplayGraphNaiveBayes(correlationData, 'Naive Bayes Data')
-
-    print()
-    print('There is a {:.2f}% correlation between mood and weather.'.format(returnData[8]))
-
-
-def DisplayGraphNaiveBayes(correlationData, title):
-    sentimentData, weatherData = ConvertTargetsToInts(correlationData)
-
-    sentimentPlotDict = {}
-    weatherPlotDict = {}
-    for i in range(len(correlationData)):
-        key = (sentimentData[i] * 1000000) + i
-        sentimentPlotDict[key] = sentimentData[i]
-        weatherPlotDict[key] = weatherData[i]
-
-    orderedSentimentDict = collections.OrderedDict(sorted(sentimentPlotDict.items()))
-    orderedWeatherDict = collections.OrderedDict(sorted((weatherPlotDict.items())))
-
-    sentimentPlotPoints = []
-    for key in orderedSentimentDict:
-        sentimentPlotPoints.append(orderedSentimentDict[key])
-
-    weatherPlotPoints = []
-    for key in orderedWeatherDict:
-        weatherPlotPoints.append(orderedWeatherDict[key])
-
-    plt.plot(sentimentPlotPoints, 'grey', sentimentPlotPoints, 'k.', weatherPlotPoints, 'k', weatherPlotPoints, 'b.')
-    plt.ylabel('negative to positive sentiment(grey) and weather(blue)')
-    plt.title(title)
-    plt.show()
 
 
 def ConvertTargetsToInts(correlationData):

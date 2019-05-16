@@ -1,14 +1,18 @@
-from datetime import datetime, timedelta
-from TwitterSearch import *
+from datetime import datetime as dt
+from datetime import timedelta
+from Display import ProgressBar
 import math
-from ProgressBar import *
+import re
+from TwitterSearch import *
 
 
 def FindTweets(cities, tsoCount):
     print()
-    print('Finding tweets...')
-    currentDate = datetime.strftime(datetime.now() - timedelta(days=3), '%Y-%m-%d')  # subtracting 3 days from now
-    currentDate = datetime.strptime(currentDate, '%Y-%m-%d').date()  # converting back to date object
+    print('+' + '-'*81 + '+')
+    print('| Finding tweets...'.ljust(82) + '|')
+    threeDaysAgo = dt.now() - timedelta(days=3)  # subtracting 3 days from now
+    threeDaysAgo = threeDaysAgo.strftime('%Y-%m-%d')  # converting from timedelta to string object
+    threeDaysAgo = dt.strptime(threeDaysAgo, '%Y-%m-%d').date()  # converting back to date object
     allTweetData = []
     count = 0
     for city in cities:
@@ -21,7 +25,7 @@ def FindTweets(cities, tsoCount):
             tso.set_language('en') # we want to see German tweets only
             tso.set_include_entities(False) # and don't give us all those entity information
             tso.set_geocode(latitude=city[3][0], longitude=city[3][1], radius=cityRadius, imperial_metric=False)
-            tso.set_since(currentDate)
+            tso.set_since(threeDaysAgo)
 
             # it's about time to create a TwitterSearch object with our secret tokens
             ts = TwitterSearch(
@@ -35,17 +39,30 @@ def FindTweets(cities, tsoCount):
                 allTweetData.append(GetTweetData(tweet, city))
 
             count += 1
-            update_progress(count / len(cities))
+            ProgressBar(count / len(cities))
         except TwitterSearchException as ex:
             print(ex.message)
 
-    print('Finished finding tweets')
+    print('| Finished finding tweets'.ljust(82) + '|')
     return allTweetData
 
 
 def GetTweetData(tweet, city):
-    text = tweet['text']
+    text = CleanTweet(tweet['text'])
     time = tweet['created_at']
     location = city[1]
     tweetData = [text, time, location]
     return tweetData
+
+
+def CleanTweet(text):
+    # remove links
+    text = re.sub(r'http\S+', '', text)
+    # remove hashtags
+    text = re.sub(r'#', '', text)
+    # remove hollas
+    text = re.sub(r'@\S+', '', text)
+    # remove RT
+    text = re.sub(r'RT', '', text)
+    text = text.strip()
+    return text

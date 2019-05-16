@@ -1,12 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 from dateutil.parser import parse
+from Display import DisplayBlock, ProgressBar
 from noaa_sdk import noaa
-from ProgressBar import *
 
 
 def GetWeatherData(tweets):
-    print()
-    print('Finding weather data for ' + str(len(tweets)) + " tweets...")
+    DisplayBlock()
+    print('| Finding weather data for {} tweets...'.format(len(tweets)).ljust(82) + '|')
 
     n = noaa.NOAA()
     weatherData = []
@@ -28,8 +29,8 @@ def GetWeatherData(tweets):
             tweetDateEnd = tweetDateEnd[0:index]
         except ValueError:
             tweetDateEnd = tweetDateEnd
-        tweetDateStart = datetime.strptime(tweetDateEnd, dateFormat)
-        tweetDateStart = datetime.strftime(tweetDateStart - timedelta(hours=1), dateFormat)
+        tweetDateStart = dt.strptime(tweetDateEnd, dateFormat)
+        tweetDateStart = dt.strftime(tweetDateStart - timedelta(hours=1), dateFormat)
         observations = n.get_observations(tweet[2], 'us', tweetDateStart, tweetDateEnd)
         for observation in observations:
             failedPass = False
@@ -41,10 +42,10 @@ def GetWeatherData(tweets):
         if failedPass is True:
             tweetsToDelete.append(count)
         else:
-            tweetDateEnd = datetime.strptime(tweetDateEnd, dateFormat)
-            tweetDateEnd = datetime.strftime(tweetDateEnd - timedelta(hours=3), dateFormat)
-            tweetDateStart = datetime.strptime(tweetDateStart, dateFormat)
-            tweetDateStart = datetime.strftime(tweetDateStart - timedelta(hours=3), dateFormat)
+            tweetDateEnd = dt.strptime(tweetDateEnd, dateFormat)
+            tweetDateEnd = dt.strftime(tweetDateEnd - timedelta(hours=3), dateFormat)
+            tweetDateStart = dt.strptime(tweetDateStart, dateFormat)
+            tweetDateStart = dt.strftime(tweetDateStart - timedelta(hours=3), dateFormat)
             observations = n.get_observations(tweet[2], 'us', tweetDateStart, tweetDateEnd)
             for observation in observations:
                 oldPressure = observation['barometricPressure']['value']
@@ -52,8 +53,8 @@ def GetWeatherData(tweets):
                 break
 
         count += 1
-        update_progress(count / len(tweets))
-    print('Found weather data for all tweets')
+        ProgressBar(count / len(tweets))
+    print('| Found weather data for all tweets'.ljust(82) + '|')
 
     return weatherData, tweetsToDelete
 
@@ -93,7 +94,7 @@ def GetTemperatureScore(weather):
     try:
         if weather[0] < 0 or weather[0] > 40:
             temperatureScore = -2
-        elif weather[0] < 15:
+        elif weather[0] < 15 or weather[0] > 25:
             temperatureScore = -1
         elif weather[0] >= 15 or weather[0] <= 25:
             temperatureScore = 1

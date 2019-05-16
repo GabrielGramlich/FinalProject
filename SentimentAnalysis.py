@@ -1,11 +1,11 @@
+from Display import DisplayTrainingResults, DisplayBlock
+from imblearn.over_sampling import SMOTE
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-from imblearn.over_sampling import SMOTE
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import re
 
 
 def PerformSentimentAnalysis(tweets):
@@ -14,66 +14,61 @@ def PerformSentimentAnalysis(tweets):
     count = 0
     nb, vect = TrainMachine()
 
-    print()
-    print('Finding sentiment data for ' + str(len(tweets)) + ' tweets...')
+    print('|'.ljust(82) + '|')
+    print('| Finding sentiment data for {} tweets...'.format(len(tweets)).ljust(82) + '|')
     for tweet in tweets:
-        text = CleanTweet(tweet)
+        text = tweet[0]
         sentiment, sentimentScore, delete = ProcessTweet(text, nb, vect)
         if delete:
             tweetsToDelete.append(count)
         else:
             sentimentData.append([tweet, [sentiment, sentimentScore]])
         count += 1
-    print('Found sentiment data for all tweets')
+    print('| Found sentiment data for all tweets'.ljust(82) + '|')
 
     return sentimentData, tweetsToDelete
 
 
 def TrainMachine():
-    print()
-    print('Super sci-fi fun time. Training the machine...')
+    DisplayBlock()
+    print('| Super sci-fi fun time. Training the machine...'.ljust(82) + '|')
 
-    data = pd.read_csv('TrainingTweets.csv')
+    go = True
+    count = 10
+    y_test = None
+    y_pred = None
+    nb = None
+    vect = None
 
-    X = data.text  # get tweets
-    y = data.airline_sentiment  # get sentiment value (negative, neutral, positive)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)    # split each row into 80% testing and
-                                                                                # 20% training data
-    vect = CountVectorizer(binary=False)
-    X_train_vect = vect.fit_transform(X_train)
+    while go:
+        data = pd.read_csv('TrainingTweets.csv')
 
-    sm = SMOTE()
+        X = data.text  # get tweets
+        y = data.airline_sentiment  # get sentiment value (negative, neutral, positive)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)  # split each row into 80% training and
+        # 20% testing data
+        vect = CountVectorizer(binary=False)
+        X_train_vect = vect.fit_transform(X_train)
 
-    X_train_res, y_train_res = sm.fit_sample(X_train_vect, y_train)  # artifically creating new test data
+        sm = SMOTE()
 
-    nb = MultinomialNB()
-    nb.fit(X_train_res, y_train_res)
+        X_train_res, y_train_res = sm.fit_sample(X_train_vect, y_train)  # artificially creating new test data
 
-    X_test_vect = vect.transform(X_test)
-    y_pred = nb.predict(X_test_vect)
+        nb = MultinomialNB()
+        nb.fit(X_train_res, y_train_res)
 
-    print('Training Complete')
-    print('Accuracy: {:.2f}%'.format(accuracy_score(y_test, y_pred) * 100))
-    print('F1 Score: {:.2f}%'.format(f1_score(y_test, y_pred, average='weighted') * 100))
-    print('Confusion Matrix:')
-    print('WNegPNeg\tWNegPNeu\tWNegPPos\nWNeuPNeg\tWNeuPNeu\tWNeuPPos\nWPosPNeg\tWPosPNeu\tWPosPPos')
-    print(confusion_matrix(y_test, y_pred))
+        X_test_vect = vect.transform(X_test)
+        y_pred = nb.predict(X_test_vect)
+
+        if accuracy_score(y_test, y_pred) * 100 > 70:
+            # TODO change this back
+            go = False
+        if count % 20 == 0:
+            print('| Insufficient test result accuracy. Retraining...'.ljust(82) + '|')
+        count += 1
+    DisplayTrainingResults(y_test, y_pred)
 
     return nb, vect
-
-
-def CleanTweet(tweet):
-    text = tweet[0]
-    # remove links
-    text = re.sub(r'http\S+', '', text)
-    # remove hashtags
-    text = re.sub(r'#', '', text)
-    # remove hollas
-    text = re.sub(r'@\S+', '', text)
-    # remove RT
-    text = re.sub(r'RT', '', text)
-    text = text.strip()
-    return text
 
 
 def ProcessTweet(text, nb, vect):
