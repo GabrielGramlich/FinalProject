@@ -5,7 +5,6 @@ from TweetFarming import *
 from WeatherAnalysis import *
 from Display import *
 
-#6:33
 
 def Main():
     try:
@@ -17,14 +16,15 @@ def Main():
         print('\nIt was dope, right? Tell your friends.\n')
     except IndexError:
         print('+' + '-'*81 + '+' + '\n')
-        print('There was an issue with data compiled. Please run again.')
+        print('There was an issue with data compiled. Please run again.\n')
     except ZeroDivisionError:
         print('+' + '-'*81 + '+' + '\n')
-        print('Not enough data to complete operations. Try extending search parameters.')
+        print('Not enough data to complete operations. Try extending search parameters.\n')
     except Exception as ex:
         print('+' + '-'*81 + '+' + '\n')
         print('Something unexpected happened:')
         print(ex)
+        print()
 
 
 def GetData(tsoCount, cityCount):
