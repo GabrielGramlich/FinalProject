@@ -35,50 +35,51 @@ def TrainMachine():
 
     go = True
     count = 10
-    y_test = None
-    y_pred = None
+    labelTest = None
+    labelPrediction = None
     nb = None
     vect = None
 
     while go:
         data = pd.read_csv('TrainingTweets.csv')
 
-        X = data.text  # get tweets
-        y = data.airline_sentiment  # get sentiment value (negative, neutral, positive)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)  # split each row into 80% training and
-        # 20% testing data
+        features = data.text    # Get tweets
+        y = data.airline_sentiment  # Get sentiment value (negative, neutral, positive)
+        # Split each row into 80% training and 20% testing data
+        featuresTrain, featuresTest, labelTrain, labelTest = train_test_split(features, y, test_size=0.2)
         vect = CountVectorizer(binary=False)
-        X_train_vect = vect.fit_transform(X_train)
+        featuresTrainVect = vect.fit_transform(featuresTrain)   # Gathers features from text for training
 
         sm = SMOTE()
 
-        X_train_res, y_train_res = sm.fit_sample(X_train_vect, y_train)  # artificially creating new test data
+        # Artificially creating new test data
+        featuresTrainBalanced, labelTrainBalanced = sm.fit_sample(featuresTrainVect, labelTrain)
 
         nb = MultinomialNB()
-        nb.fit(X_train_res, y_train_res)
+        nb.fit(featuresTrainBalanced, labelTrainBalanced)   # Finding patterns between features and labels
 
-        X_test_vect = vect.transform(X_test)
-        y_pred = nb.predict(X_test_vect)
+        featuresTestVect = vect.transform(featuresTest)     # Gathers features from text for testing
+        labelPrediction = nb.predict(featuresTestVect)  # Get predictions
 
-        if accuracy_score(y_test, y_pred) * 100 > 80:
+        if accuracy_score(labelTest, labelPrediction) * 100 > 80:
             go = False
         if count % 20 == 0:
             print('| Insufficient test result accuracy. Retraining...'.ljust(82) + '|')
         count += 1
-    DisplayTrainingResults(y_test, y_pred)
+    DisplayTrainingResults(labelTest, labelPrediction)
 
     return nb, vect
 
 
 def ProcessTweet(text, nb, vect):
     tweets = [text]
-    test_tweets = vect.transform(tweets)
-    sentiment = nb.predict(test_tweets)
+    testTweets = vect.transform(tweets)     # Gather features from text
+    sentiment = nb.predict(testTweets)  # Find sentiment of tweets
     delete = False
 
     sia = SentimentIntensityAnalyzer()
     sentimentScore = None
-    ss = sia.polarity_scores(text)
+    ss = sia.polarity_scores(text)  # Get sentiment rating, vader style
     for item in sorted(ss):
         sentimentScore = ss[item]
         break

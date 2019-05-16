@@ -45,9 +45,9 @@ def CreateRandomCorrelationData(upperBound):
     randomData = []
 
     for i in range(upperBound):
-        randomSentiment = random.randint(-100, 100)
+        randomSentiment = random.randint(-100, 100)     # Getting made up sentiment rating
         randomSentiment = randomSentiment / 100
-        randomWeather = random.randint(-4, 4)
+        randomWeather = random.randint(-4, 4)   # Getting made up weather data
         randomWeather = randomWeather / 4
         randomData.append([randomSentiment, randomWeather])
 
@@ -98,6 +98,8 @@ def DetermineCorrelationNaiveBayes(sentimentData, weatherScores):
 
 
 def ConvertTargetsToInts(correlationData):
+    # Converting strings to ints for graphing
+
     sentimentData = []
     weatherData = []
 

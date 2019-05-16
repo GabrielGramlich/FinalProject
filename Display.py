@@ -11,9 +11,8 @@ startingTime = None
 def ProgressBar(progress):
     global startingTime
 
-    barLength = 40
     status = ''
-    if progress >= 1:
+    if progress >= 1:   # Checking if completed
         progress = 1
         status = 'Done      |\r\n'
         startingTime = None
@@ -31,26 +30,29 @@ def ProgressBar(progress):
             startingTime = dt.now()
             status = 'Calculating time remaining...'
 
-    block = int(round(barLength*progress))
-    text = '\r| Percent completed: {1:.2f}% [{0}] {2}'.format('#'*block + '-'*(barLength-block), progress*100, status)
+    barLength = 40  # Setting size of progress bar in characters
+    block = int(round(barLength * progress))  # Making the completed section of the bar
+    text = '\r| Percent completed: {1:.2f}% [{0}] {2}'.format('#'*block + '-'*(barLength - block),
+                                                              progress * 100, status)
     sys.stdout.write(text)
     sys.stdout.flush()
 
 
 def DisplayBlock():
+    # Making a pretty display between sections of code
     print('+' + '-'*81 + '+')
-    print(' ' + '\\-/' * 27 + ' ')
-    print(' ' + '/-\\' * 27 + ' ')
+    print('|' + '\\-/' * 27 + '|')
+    print('|' + '/-\\' * 27 + '|')
     print('+' + '-'*81 + '+')
 
 
-def DisplayTrainingResults(y_test, y_pred):
-    cm = confusion_matrix(y_test, y_pred)
+def DisplayTrainingResults(labelTest, labelPrediction):
+    cm = confusion_matrix(labelTest, labelPrediction)
     print('| Training Complete'.ljust(82) + '|')
     print('|'.ljust(82) + '|')
     print('| Training Results:'.ljust(82) + '|')
-    print('| Accuracy: {:.2f}%'.format(accuracy_score(y_test, y_pred) * 100).ljust(82) + '|')
-    print('| F1 Score: {:.2f}%'.format(f1_score(y_test, y_pred, average='weighted') * 100).ljust(82) + '|')
+    print('| Accuracy: {:.2f}%'.format(accuracy_score(labelTest, labelPrediction) * 100).ljust(82) + '|')
+    print('| F1 Score: {:.2f}%'.format(f1_score(labelTest, labelPrediction, average='weighted') * 100).ljust(82) + '|')
     print('|'.ljust(82) + '|')
     print('| Confusion Matrix:'.ljust(82) + '|')
     print('| *************Pred neg --> Pred pos*'.ljust(82) + '|')
@@ -63,7 +65,7 @@ def DisplayTrainingResults(y_test, y_pred):
 
 def OutputDataVader(returnData, correlationData):
     randomData = CreateRandomCorrelationData(len(correlationData))
-    DisplayGraphVader(randomData, 'Random Data')
+    DisplayGraphVader(randomData, 'Random Data')    # Displaying a graph of random data for comparison to real data
 
     booleanTotal = returnData[4] + returnData[5]
 
@@ -85,6 +87,7 @@ def DisplayGraphVader(correlationData, title):
     sentimentPlotDict = {}
     weatherPlotDict = {}
     for i in range(len(correlationData)):
+        # Creating a key so values of both dictionaries can be sorted together
         key = (correlationData[i][0] * 1000000) + i
         sentimentPlotDict[key] = correlationData[i][0]
         weatherPlotDict[key] = correlationData[i][1]
@@ -135,6 +138,7 @@ def DisplayGraphNaiveBayes(correlationData, title):
     sentimentPlotDict = {}
     weatherPlotDict = {}
     for i in range(len(correlationData)):
+        # Creating a key so values of both dictionaries can be sorted together
         key = (sentimentData[i] * 1000000) + i
         sentimentPlotDict[key] = sentimentData[i]
         weatherPlotDict[key] = weatherData[i]

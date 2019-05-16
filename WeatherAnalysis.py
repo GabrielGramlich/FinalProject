@@ -29,9 +29,10 @@ def GetWeatherData(tweets):
             tweetDateEnd = tweetDateEnd[0:index]
         except ValueError:
             tweetDateEnd = tweetDateEnd
-        tweetDateStart = dt.strptime(tweetDateEnd, dateFormat)
+        tweetDateStart = dt.strptime(tweetDateEnd, dateFormat)  # Convert to datetime object
+        # Subtract an hour, and convert back
         tweetDateStart = dt.strftime(tweetDateStart - timedelta(hours=1), dateFormat)
-        observations = n.get_observations(tweet[2], 'us', tweetDateStart, tweetDateEnd)
+        observations = n.get_observations(tweet[2], 'us', tweetDateStart, tweetDateEnd)     # Get weather object
         for observation in observations:
             failedPass = False
             temperature = observation['temperature']['value']
@@ -72,7 +73,7 @@ def GetWeatherScores(weatherData):
             pressureScore = GetPressureScore(weather)
             humidityScore = GetHumidityScore(weather)
 
-            weatherScore = (temperatureScore + pressureScore + humidityScore) / 4
+            weatherScore = (temperatureScore + pressureScore + humidityScore) / 4   # Get rating between -1 and 1
 
             weatherSentiment = ''
             if weatherScore < -0.33:
@@ -92,13 +93,13 @@ def GetTemperatureScore(weather):
     temperatureScore = 0
 
     try:
-        if weather[0] < 0 or weather[0] > 40:
+        if weather[0] < 0 or weather[0] > 40:   # Check if temp is out of range 32-105 farenheit
             temperatureScore = -2
-        elif weather[0] < 15 or weather[0] > 25:
+        elif weather[0] < 15 or weather[0] > 25:    # Check if out of range 60-80
             temperatureScore = -1
         elif weather[0] >= 15 or weather[0] <= 25:
             temperatureScore = 1
-        if weather[0] > 20:
+        if weather[0] > 20:     # Check if above 70
             temperatureScore += 1
     except TypeError:
         temperatureScore = 0
@@ -110,16 +111,16 @@ def GetPressureScore(weather):
     pressureScore = 0
 
     try:
-        conversionRate = 0.0002952998751
+        conversionRate = 0.0002952998751    # Conversion from Pennsylvania to inches mercury
         oldPressure = weather[1] * conversionRate
         newPressure = weather[2] * conversionRate
-        if newPressure < 29.92:  # low pressure is a rule of thumb for bad weather, high pressure for good
+        if newPressure < 29.92:  # Low pressure is a rule of thumb for bad weather, high pressure for good
             pressureScore = -.5
         else:
             pressureScore = .5
-        if oldPressure - newPressure < -0.04:  # change in pressure over three hours shows a storm front moving in
+        if oldPressure - newPressure < -0.04:  # Change in pressure over three hours shows a storm front moving in
             pressureScore += .5
-        elif oldPressure - newPressure > 0.04:
+        elif oldPressure - newPressure > 0.04:  # Change of less than .04 is slight change, higher is noticeable
             pressureScore += -.5
     except TypeError:
         pressureScore = 0
@@ -133,7 +134,7 @@ def GetHumidityScore(weather):
     try:
         if weather[3] < 20 or weather[3] > 65:
             humidityScore = -1
-        elif weather[3] >= 30 or weather[3] <= 50:
+        elif weather[3] >= 30 or weather[3] <= 50:  # Between 30 and 50% humidity is generally seen as comfortable
             humidityScore = 1
     except TypeError:
         humidityScore = 0

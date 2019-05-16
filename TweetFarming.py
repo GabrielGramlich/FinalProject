@@ -10,24 +10,23 @@ def FindTweets(cities, tsoCount):
     print()
     print('+' + '-'*81 + '+')
     print('| Finding tweets...'.ljust(82) + '|')
-    threeDaysAgo = dt.now() - timedelta(days=3)  # subtracting 3 days from now
-    threeDaysAgo = threeDaysAgo.strftime('%Y-%m-%d')  # converting from timedelta to string object
-    threeDaysAgo = dt.strptime(threeDaysAgo, '%Y-%m-%d').date()  # converting back to date object
+    threeDaysAgo = dt.now() - timedelta(days=3)     # Subtracting 3 days from now
+    threeDaysAgo = threeDaysAgo.strftime('%Y-%m-%d')    # Converting from timedelta to string object
+    threeDaysAgo = dt.strptime(threeDaysAgo, '%Y-%m-%d').date()     # Converting back to date object
     allTweetData = []
     count = 0
     for city in cities:
         try:
-            cityRadius = int(math.sqrt(city[2] / math.pi))
+            cityRadius = int(math.sqrt(city[2] / math.pi))  # Finding radius of the city from km2
 
             tso = TwitterSearchOrder()
             tso.set_count(tsoCount)
-            tso.set_keywords([' '])
-            tso.set_language('en') # we want to see German tweets only
-            tso.set_include_entities(False) # and don't give us all those entity information
+            tso.set_keywords([' '])     # Using space instead of a word so we get any and all tweets
+            tso.set_language('en')
+            tso.set_include_entities(False)
             tso.set_geocode(latitude=city[3][0], longitude=city[3][1], radius=cityRadius, imperial_metric=False)
             tso.set_since(threeDaysAgo)
 
-            # it's about time to create a TwitterSearch object with our secret tokens
             ts = TwitterSearch(
                 consumer_key='BMek2JK3Ykw5le2aMCI4drivX',
                 consumer_secret='ifJU4ALt59Es3B6XVxulsmjjhenF3Jp3gcAsH6V0336Du7bOW1',
@@ -39,7 +38,7 @@ def FindTweets(cities, tsoCount):
                 allTweetData.append(GetTweetData(tweet, city))
 
             count += 1
-            ProgressBar(count / len(cities))
+            ProgressBar(count / len(cities))    # Creating a progress bar to keep the user from worrying
         except TwitterSearchException as ex:
             print(ex.message)
 
@@ -56,13 +55,9 @@ def GetTweetData(tweet, city):
 
 
 def CleanTweet(text):
-    # remove links
-    text = re.sub(r'http\S+', '', text)
-    # remove hashtags
-    text = re.sub(r'#', '', text)
-    # remove hollas
-    text = re.sub(r'@\S+', '', text)
-    # remove RT
-    text = re.sub(r'RT', '', text)
-    text = text.strip()
+    text = re.sub(r'http\S+', '', text)     # Remove links
+    text = re.sub(r'#', '', text)   # Remove hashtags
+    text = re.sub(r'@\S+', '', text)    # Removes tags
+    text = re.sub(r'RT', '', text)  # Remove retweets
+    text = text.strip()     # Remove leading and trailing spaces
     return text
